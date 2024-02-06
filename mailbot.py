@@ -39,8 +39,5 @@ if __name__ == "__main__":
         level=logging.INFO,
     )
 
-    print(sys.argv)
-    print(type(sys.argv))
-
     if check_arguments(sys.argv) == False:
         raise Exception("Invalid arguments")
