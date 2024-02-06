@@ -1,17 +1,8 @@
 import logging
 import sys
-import base64
 from pathlib import Path
-from smtplib import SMTP_SSL
-
-
-from Private import Private
 
 ARGUMENTS_NB = 2
-
-SCOPES = [
-    "https://www.googleapis.com/auth/gmail.send",
-]
 
 logger = logging.getLogger()
 
