@@ -2,3 +2,4 @@
 *.log
 pool
 Private.py
+token.json
