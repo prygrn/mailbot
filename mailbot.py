@@ -1,16 +1,11 @@
-import logging
-from smtplib import SMTPAuthenticationError, SMTPException
 import sys
 from pathlib import Path
+import logging
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from yagmail import SMTP
-from yagmail import YagAddressError, YagConnectionClosed
+from smtplib import SMTPAuthenticationError, SMTPException
+from yagmail import SMTP,YagAddressError, YagConnectionClosed
 
 ARGUMENTS_NB = 2
-SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
 
 logger = logging.getLogger()
 
@@ -52,6 +47,15 @@ def check_arguments(argv):
 
 
 def send_mail(credentials):
+    """Sending mail using Yagmail library (Gmail with OAuth2 + SMTP)
+    As this library aims only to send mails, the SCOPES are hardcoded inside it. THere is no need to bother with them.
+
+    Args:
+        credentials (Path): Path Object to the credentials
+
+    Returns:
+        Yag: Yag Object : Main object of the library used to manipulate easily messages metadata
+    """
     yag = None
 
     # TODO Add a check for the permissions in SCOPES. If not present for this function, delete then recreate the token file

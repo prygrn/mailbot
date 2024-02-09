@@ -1,5 +1,4 @@
 [_.]*/
 *.log
 pool
-Private.json
-token.json
+*.json
