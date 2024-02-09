@@ -1,14 +1,13 @@
 import logging
+from smtplib import SMTPAuthenticationError, SMTPException
 import sys
 from pathlib import Path
-import base64
-from email.message import EmailMessage
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from yagmail import SMTP
+from yagmail import YagAddressError, YagConnectionClosed
 
 ARGUMENTS_NB = 2
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
@@ -29,6 +28,14 @@ def check_token_path(string_path):
 
 
 def check_arguments(argv):
+    """Check if the arguments provided are valid 
+
+    Args:
+        argv (list[str]): Arguments provided by the command line
+
+    Returns:
+        bool: Arguments are valid (True) or not (False)
+    """    
     if len(argv) != ARGUMENTS_NB:
         logger.critical(
             """This tool requires the following arguments:
@@ -45,33 +52,27 @@ def check_arguments(argv):
 
 
 def send_mail(credentials):
-    mail = None
+    yag = None
 
     # TODO Add a check for the permissions in SCOPES. If not present for this function, delete then recreate the token file
     try:
-        service = build("gmail", "v1", credentials=credentials)
-        message = EmailMessage()
-
-        # Headers
-        message["To"] = ""
-        message["From"] = ""
-        message["Subject"] = "Yeah, succeeded to send an automated mail!"
-
-        # Body
-        message.set_content("Hi, this is automated mail. Please do not reply.")
-
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        request_message = {"raw": encoded_message}
-        mail = (
-            service.users().messages().send(userId="me", body=request_message).execute()
+        yag = SMTP("mycraigdoe2@gmail.com", oauth2_file=str(credentials))
+        yag.send(
+            to="pierremogrison@gmail.com",
+            subject="Yeah, succeeded to send an automated mail!",
+            contents="Hi, this is an automated mail. Please do not reply.",
+            attachments="README.md",
         )
-        logger.info(f"Message sent\nid: {mail['id']}")
+    except SMTPException as e:
+        logger.exception(e)
+    except YagAddressError as e:
+        logger.exception(
+            f"A {type(e).__name__} occurred: The address (sender or receiver) was given in an invalid format"
+        )
+    except YagConnectionClosed as e:
+        logger.exception(f"A {type(e).__name__} occurred: Login required again")
 
-    except HttpError as error:
-        logger.exception(f"An error occurred: {error}")
-        draft = None
-
-    return mail
+    return yag
 
 
 def main():
@@ -89,27 +90,7 @@ def main():
     if check_arguments(sys.argv) == False:
         raise Exception("Invalid arguments")
 
-    credentials = None
-    token_file = Path("token.json")
-    credentials_file = Path(sys.argv[1])
-
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if Path(token_file).is_file():
-        credentials = Credentials.from_authorized_user_file(str(token_file), SCOPES)
-    # If there are no (valid) credentials, let the user log in
-    if not credentials or not credentials.valid:
-        if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                str(credentials_file), SCOPES
-            )
-            credentials = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open(str(token_file), "w") as token:
-            token.write(credentials.to_json())
+    credentials = Path(sys.argv[1])
 
     if send_mail(credentials) == None:
         return

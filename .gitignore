@@ -1,5 +1,5 @@
 [_.]*/
 *.log
 pool
-Private.py
+Private.json
 token.json
