@@ -57,8 +57,6 @@ def send_mail(credentials):
         Yag: Yag Object : Main object of the library used to manipulate easily messages metadata
     """
     yag = None
-
-    # TODO Add a check for the permissions in SCOPES. If not present for this function, delete then recreate the token file
     try:
         yag = SMTP("mycraigdoe2@gmail.com", oauth2_file=str(credentials))
         yag.send(
